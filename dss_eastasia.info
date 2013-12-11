@@ -1,0 +1,11 @@
+name = "Lafayette College East Asia Image Collections Solution Pack"
+description = "Implementing EAIC functionality within the Islandora ecosystem"
+dependencies[] = islandora
+dependencies[] = islandora_book
+package = Lafayette College Libraries
+version = 7.x-1.1
+core = 7.x
+files[] = tests/tokens.test
+
+; This must be specified for unit testing!
+testing_api = 2.x
