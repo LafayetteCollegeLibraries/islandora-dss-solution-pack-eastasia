@@ -9,7 +9,8 @@
     <?php print $viewer; ?>
   </div>
 <?php endif; ?>
-<!-- @todo Add table of metadata values -->
+
+  <div class="islandora-page-metadata-wrapper">
   <fieldset class="islandora-page-metadata">
   <legend><span class="fieldset-legend"><?php print t('Extended details'); ?></span></legend>
     <div class="fieldset-wrapper">
@@ -47,3 +48,4 @@
       </dl>
     </div>
   </fieldset>
+  </div><!-- /.islandora-page-metadata-wrapper -->

@@ -55,6 +55,9 @@ function _dss_eastasia_preprocess_dss_eastasia_page(array &$variables, $page) {
   module_load_include('inc', 'islandora', 'includes/solution_packs');
 
   $viewer = islandora_get_viewer($params, 'islandora_book_page_viewers');
+
+  dpm($viewer);
+
   if($viewer) {
     
     $variables['viewer'] = $viewer;
@@ -78,7 +81,8 @@ function _dss_eastasia_preprocess_dss_eastasia_page(array &$variables, $page) {
 /*
  * Serves as the "front" tab
  */
-function dss_eastasia_preprocess_dss_eastasia_islandora_book_book(array &$variables) {
+//function dss_eastasia_preprocess_dss_eastasia_islandora_book_book(array &$variables) {
+function dss_eastasia_preprocess_islandora_book_book(array &$variables) {
 
   module_load_include('inc', 'islandora', 'includes/solution_packs');
   //module_load_include('inc', 'dss_eastasia', 'includes/mods');
@@ -145,7 +149,7 @@ function dss_eastasia_preprocess_dss_eastasia_islandora_book_book(array &$variab
     $mods_str = preg_replace('/<\?xml version="1.0"\?>/', '', $mods_str);
     $mods_str = '<modsCollection>' . $mods_str . '</modsCollection>';
 
-    $mods_object = new Mods($mods_str);
+    $mods_object = new EastAsiaMods($mods_str);
   } catch (Exception $e) {
     
     drupal_set_message(t('Error retrieving object %s %t', array('%s' => $object->id, '%t' => $e->getMessage())), 'error', FALSE);
@@ -191,6 +195,8 @@ function dss_eastasia_preprocess_dss_eastasia_last_page(array &$variables) {
 }
 
 function dss_eastasia_preprocess_dss_eastasia_front_page(array &$variables) {
+
+  dpm('trace');
 
   module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
   //module_load_include('inc', 'dss_eastasia', 'includes/mods');
