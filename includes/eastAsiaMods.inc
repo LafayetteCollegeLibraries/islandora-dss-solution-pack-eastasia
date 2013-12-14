@@ -315,11 +315,14 @@ class EastAsiaMods extends Mods {
 	  $element['facet'] = $facet;
 
 	  // Refactor
+	  /*
 	  $element['facet_value'] = preg_replace('/\ /', '\ ', $element['value']);
 	  $element['facet_value'] = preg_replace('/\[/', '\[', $element['facet_value']);
 	  $element['facet_value'] = preg_replace('/\]/', '\]', $element['facet_value']);
 	  $element['facet_value'] = preg_replace('/\//', '%2F', $element['facet_value']);
 	  $element['facet_value'] = preg_replace('/\:/', '\:', $element['facet_value']);
+	  */
+	  $element['facet_value'] = '"' . $element['value'] . '"';
 	}
 
 	if($is_date) {

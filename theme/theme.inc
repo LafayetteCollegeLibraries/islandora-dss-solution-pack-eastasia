@@ -81,8 +81,7 @@ function _dss_eastasia_preprocess_dss_eastasia_page(array &$variables, $page) {
 /*
  * Serves as the "front" tab
  */
-//function dss_eastasia_preprocess_dss_eastasia_islandora_book_book(array &$variables) {
-function dss_eastasia_preprocess_islandora_book_book(array &$variables) {
+function dss_eastasia_preprocess_dss_eastasia_postcard(array &$variables) {
 
   module_load_include('inc', 'islandora', 'includes/solution_packs');
   //module_load_include('inc', 'dss_eastasia', 'includes/mods');
@@ -137,9 +136,7 @@ function dss_eastasia_preprocess_islandora_book_book(array &$variables) {
     'jp2_url' => $jp2_url,
   );
   */
-
-
-
+  
   // Refactor
   // Retrieve the MODS Metadata
   try {
