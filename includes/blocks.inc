@@ -28,7 +28,6 @@ function _dss_eastasia_get_islandora_fields($query_field, $filters) {
     case 'ldr':
     case 'mdl_prints':
     case 'geology_slides_esi':
-
     case 'mckelvy':
     case 'war_casualties':
 

@@ -33,7 +33,6 @@ function dss_eastasia_theme() {
 						 'file' => 'theme/theme.inc',
 						 'template' => 'theme/islandora-page',
 						 ),
-
 	       'dss_eastasia_islandora_book_book' => array(
 							   'arguments' => array('object' => NULL),
 							   'file' => 'theme/theme.inc',
@@ -259,8 +258,9 @@ function _dss_eastasia_islandora_solr($query=NULL) {
  */
 function dss_eastasia_menu_alter(&$items) {
 
-  drupal_load('module', 'islandora_book');
+  //drupal_load('module', 'islandora_book');
 
+  /*
   $items['islandora/object/%islandora_object/back'] = array(
 							    'title' => 'Back',
 							    'type' => MENU_LOCAL_TASK,
@@ -269,102 +269,21 @@ function dss_eastasia_menu_alter(&$items) {
 							    'access callback' => 'dss_eastasia_last_page_access_callback',
 							    'access arguments' => array(2),
 							    );
-
-  /*
-  $items['islandora/object/%islandora_object/front'] = array(
-							     'title' => 'Front',
-							     'type' => MENU_DEFAULT_LOCAL_TASK,
-							     //'type' => MENU_LOCAL_TASK,
-							     'page callback' => 'dss_eastasia_front_page_menu',
-							     'page arguments' => array(2),
-							     'access callback' => 'dss_eastasia_front_page_access_callback',
-							     'access arguments' => array(2),
-							     );
   */
 
+  /*
   $items['islandora/object/%islandora_object/view']['title'] = 'Front';
   $items['islandora/object/%islandora_object/view']['page callback'] = 'dss_eastasia_islandora_book_book_menu';
   $items['islandora/object/%islandora_object/view']['page arguments'] = array(2);
   $items['islandora/object/%islandora_object/view/default']['title'] = 'Front';
   $items['islandora/object/%islandora_object/view/default']['page callback'] = 'dss_eastasia_islandora_book_book_menu';
   $items['islandora/object/%islandora_object/view/default']['page arguments'] = array(2);
-  /*
-
-  $items['islandora/object/%islandora_object/view/default']['title'] = 'Front';
   */
-
-  /*
-  $items['islandora/object/%islandora_object/view']['type'] = MENU_LOCAL_TASK;
-  $items['islandora/object/%islandora_object/view/default']['type'] = MENU_LOCAL_TASK;
-  */
-
-  /*
-  $items['islandora/object/%islandora_object/view'] = array(
-							    'title' => 'Front',
-							    'type' => MENU_DEFAULT_LOCAL_TASK,
-							    'weight' => -1,
-							    'page callback' => 'dss_eastasia_front_page_menu',
-							    'page arguments' => array(2),
-							    'access callback' => 'dss_eastasia_book_pages_access_callback',
-							    'access arguments' => array(2),
-							    );
-  */
-  /*
-  $items['islandora/object/%islandora_object/view/default'] = array(
-								    'title' => 'Front',
-								    'type' => MENU_DEFAULT_LOCAL_TASK,
-								    'weight' => -1,
-								    'page callback' => 'dss_eastasia_front_page_menu',
-								    'page arguments' => array(2),
-								    'access callback' => 'dss_eastasia_book_pages_access_callback',
-								    'access arguments' => array(2),
-								    );
-  */
-
-  /*
-  $items['islandora/object/%islandora_object/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -1,
-  );
-  $items['islandora/object/%islandora_object/view/default'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -1,
-  );
-   */
-
   // Issue:
   // This must be disabled only for images within the East Asia Image Collections
   unset($items['islandora/object/%islandora_object/pages']);
   unset($items['islandora/object/%islandora_object/view/default']);
-  //unset($items['islandora/object/%islandora_object/view']);
-
-  /*
-function islandora_solr_facet_pages_menu() {
-  $items = array();
-
-  // @TODO: create separate permission?
-  $items['browse'] = array(
-    'page callback' => 'islandora_solr_facet_pages_callback',
-    'page arguments' => array(1, 2),
-    'access callback' => 'islandora_solr_facet_pages_access_callback',
-    'access arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
-*/
 
   $items['browse']['page callback'] = 'dss_eastasia_islandora_solr_facet_pages_callback';
-
-  /*
-  $items['islandora/search'] = array(
-    'title' => 'Search results',
-    'page callback' => 'islandora_solr',
-    'access arguments' => array('search islandora solr'),
-    'type' => MENU_CALLBACK,
-  );
-
-   */
-
   $items['islandora/search']['page callback'] = '_dss_eastasia_islandora_solr';
 }
