@@ -289,30 +289,3 @@ function dss_eastasia_preprocess_islandora_solr_facet_pages_letterer(&$vars) {
   return $output;
 }
 
-/**
- * Implements hook_preprocess_HOOK().
- *
- */
-function dss_eastasia_process_islandora_solr_facet_pages_results(&$vars) {
-
-  $vars['complex_results'] = array();
-
-  foreach($vars['results'] as $result => $count) {
-
-    switch($vars['solr_field']) {
-    case 'eastasia.Date.Artifact.Upper':
-    case 'eastasia.Date.Artifact.Lower':
-    case 'eastasia.Date.Image.Upper':
-    case 'eastasia.Date.Image.Lower':
-      
-      $filter = $vars['solr_field'] . ':"' . addslashes($result) . 'T00:00:00Z"';
-      break;
-
-    default:
-      $filter = $vars['solr_field'] . ':"' . addslashes($result) . '"';
-    }
-
-    $vars['complex_results'][$result] = array('count' => $count,
-					      'filter' => $filter);
-  }
-}
