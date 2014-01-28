@@ -34,12 +34,11 @@ function dss_eastasia_theme() {
 						 'file' => 'theme/theme.inc',
 						 'template' => 'theme/islandora-page',
 						 ),
-
-	       'dss_eastasia_postcard' => array(
-						'arguments' => array('object' => NULL),
-						'file' => 'theme/theme.inc',
-						'template' => 'theme/islandora-eastasia-postcard',
-						),
+	       'dss_eastasia_islandora_book_book' => array(
+							   'arguments' => array('object' => NULL),
+							   'file' => 'theme/theme.inc',
+							   'template' => 'theme/islandora-book',
+							   ),
 	       // Default object template.
 	       /*
 	       'islandora_default' => array(
@@ -63,28 +62,13 @@ function dss_eastasia_theme_registry_alter(&$theme_registry) {
       ),
    */
 
-  $theme_registry['islandora_book_book']['template'] = drupal_get_path('module', 'dss_eastasia') . '/theme/islandora-page';
-
   //$theme_registry['islandora_solr_facet_pages_letterer']['path'] = drupal_get_path('module', 'dss_eastasia') . '/theme';
   //$theme_registry['islandora_solr_facet_pages_letterer']['file'] = 'includes/theme.inc';
   $theme_registry['islandora_solr_facet_pages_letterer']['path'] = drupal_get_path('module', 'dss_eastasia') . '/includes';
   $theme_registry['islandora_solr_facet_pages_letterer']['file'] = 'islandora_solr_facet_pages.inc';
 
   $theme_registry['islandora_solr_facet_pages_results']['path'] = drupal_get_path('module', 'dss_eastasia') . '/theme';
-}
-
-/**
- * Implements hook_CMODEL_PID_islandora_view_object().
- *
- */
-function dss_eastasia_islandora_bookcmodel_islandora_view_object($object) {
-
-  $parent_pid = array_pop($object->getParents());
-
-  if(preg_match('/^eastAsia\:/', $parent_pid)) {
-
-    return theme('dss_eastasia_postcard', array('object' => $object));
-  }
+  //dpm();
 }
 
 /**
@@ -162,22 +146,112 @@ function dss_eastasia_front_page_access_callback($object=NULL) {
 }
 
 /**
- * Access callback for "pages" menu
- *
- * @param FedoraObject $object
- *   The book object.
- *
- * @return bool
- *   TRUE if it should be shown, and FALSE if it should not be shown.
- *
- * @see islandora_book_pages_access_callback()
- *
+ * Callback for islandora_solr_search
+ * @see islandora_solr()
+ * Decouple and refactor
+ * 
  */
-function dss_eastasia_pages_access_callback($object = NULL) {
+function _dss_eastasia_islandora_solr_deprecated($query=NULL) {
 
-  $parent_pid = array_pop($object->getParents());
+  drupal_load('module', 'islandora_solr');
 
-  return !preg_match('/^eastAsia\:/', $parent_pid) && islandora_book_pages_access_callback($object);
+  global $_islandora_solr_queryclass;
+  drupal_add_css(drupal_get_path('module', 'islandora_solr') . '/css/islandora_solr.theme.css');
+
+  // Url parameters.
+  $params = $_GET;
+
+  // Default sorting
+  // Refactor
+  if(!array_key_exists('sort', $params)) {
+
+    $params['sort'] = 'dc.title asc';
+  }
+
+  // get profiles
+  $primary_profiles = module_invoke_all('islandora_solr_primary_display');
+  $secondary_profiles = module_invoke_all('islandora_solr_secondary_display');
+
+  // Get the preferred display profile
+  // Order: First choice is what's in the ?profile query var
+  //        Second choice is the primary display profile
+  //        Third choice is the default IslandoraSolrResults
+  $enabled_profiles = array();
+  // get enabled displays
+  $primary_display_array = variable_get('islandora_solr_primary_display_table', array());
+  // if it's set, we take these values
+  if (isset($primary_display_array['enabled'])) {
+    foreach ($primary_display_array['enabled'] as $key => $value) {
+      if ($key === $value) {
+        $enabled_profiles[] = $key;
+      }
+    }
+  }
+
+  // Set primary display
+  // check if display param is an valid, enabled profile. Else show default.
+  if (isset($params['display']) && in_array($params['display'], $enabled_profiles)) {
+    $islandora_solr_primary_display = $params['display'];
+  }
+  else {
+    $islandora_solr_primary_display = variable_get('islandora_solr_primary_display', 'default');
+    // unset invalid parameter
+    unset($params['display']);
+  }
+
+  // Build and execute Apache Solr query.
+  // this populates the GLOBAL!!!!!!!
+  $_islandora_solr_queryclass = new IslandoraSolrQueryProcessor();
+  $_islandora_solr_queryclass->buildAndExecuteQuery($query, $params);
+
+  if (empty($_islandora_solr_queryclass->islandoraSolrResult)) {
+    return t('Error searching solr index.');
+  }
+
+  // TODO: Also filter secondary displays against those checked in the configuration options.
+  if (isset($_GET['solr_profile']) && isset($secondary_profiles[$_GET['solr_profile']])) {
+    $profile = $secondary_profiles[$_GET['solr_profile']];
+  }
+  elseif (isset($primary_profiles[$islandora_solr_primary_display])) {
+    $profile = $primary_profiles[$islandora_solr_primary_display];
+  }
+  else {
+    drupal_set_message(check_plain(t('There is an error in the solr search configuration: the display profile is not found.')), 'error');
+    $profile = $primary_profiles['default'];
+  }
+  // Include the file for the display profile
+  require_once(drupal_get_path('module', $profile['module']) . '/' . $profile['file']);
+
+  // Get display class and function from current display
+  $solr_class = $profile['class'];
+  $solr_function = $profile['function'];
+
+
+  // check if the display's class exists
+  $use_default_display = TRUE;
+  if (class_exists($solr_class)) {
+    $implementation = new $solr_class();
+    // check if the display's method exists
+    if (method_exists($implementation, $solr_function)) {
+      // implement results
+      $output = $implementation->$solr_function($_islandora_solr_queryclass);
+      $use_default_display = FALSE;
+    }
+  }
+
+  // Class and method are not found: use default
+  if ($use_default_display) {
+    $results_class = new IslandoraSolrResults();
+    $output = $results_class->displayResults($_islandora_solr_queryclass);
+  }
+
+  // debug dump
+  if (variable_get('islandora_solr_debug_mode', 0)) {
+    $message = t('Params: <br /><pre>!debug</pre>', array('!debug' => print_r($_islandora_solr_queryclass->solrParams, TRUE)));
+    drupal_set_message(filter_xss($message, array('pre', 'br')), 'status');
+  }
+
+  return $output;
 }
 
 /**
@@ -185,8 +259,9 @@ function dss_eastasia_pages_access_callback($object = NULL) {
  */
 function dss_eastasia_menu_alter(&$items) {
 
-  drupal_load('module', 'islandora_book');
+  //drupal_load('module', 'islandora_book');
 
+  /*
   $items['islandora/object/%islandora_object/back'] = array(
 							    'title' => 'Back',
 							    'type' => MENU_LOCAL_TASK,
@@ -195,17 +270,6 @@ function dss_eastasia_menu_alter(&$items) {
 							    'access callback' => 'dss_eastasia_last_page_access_callback',
 							    'access arguments' => array(2),
 							    );
-
-  /*
-  $items['islandora/object/%islandora_object/front'] = array(
-							     'title' => 'Front',
-							     'type' => MENU_DEFAULT_LOCAL_TASK,
-							     //'type' => MENU_LOCAL_TASK,
-							     'page callback' => 'dss_eastasia_front_page_menu',
-							     'page arguments' => array(2),
-							     'access callback' => 'dss_eastasia_front_page_access_callback',
-							     'access arguments' => array(2),
-							     );
   */
 
   /*
@@ -216,82 +280,11 @@ function dss_eastasia_menu_alter(&$items) {
   $items['islandora/object/%islandora_object/view/default']['page callback'] = 'dss_eastasia_islandora_book_book_menu';
   $items['islandora/object/%islandora_object/view/default']['page arguments'] = array(2);
   */
-
-  // Ensure that East Asia Image Collections items do not have a "pages" menu item
-  $items['islandora/object/%islandora_object/pages']['access callback'] = 'dss_eastasia_pages_access_callback';
-
-  //unset($items['islandora/object/%islandora_object/view/default']);
+  // Issue:
+  // This must be disabled only for images within the East Asia Image Collections
+  unset($items['islandora/object/%islandora_object/pages']);
+  unset($items['islandora/object/%islandora_object/view/default']);
 
   $items['browse']['page callback'] = 'dss_eastasia_islandora_solr_facet_pages_callback';
   $items['islandora/search']['page callback'] = '_dss_eastasia_islandora_solr';
 }
-
-  /*
-
-  $items['islandora/object/%islandora_object/view/default']['title'] = 'Front';
-  */
-
-  /*
-  $items['islandora/object/%islandora_object/view']['type'] = MENU_LOCAL_TASK;
-  $items['islandora/object/%islandora_object/view/default']['type'] = MENU_LOCAL_TASK;
-  */
-
-  /*
-  $items['islandora/object/%islandora_object/view'] = array(
-							    'title' => 'Front',
-							    'type' => MENU_DEFAULT_LOCAL_TASK,
-							    'weight' => -1,
-							    'page callback' => 'dss_eastasia_front_page_menu',
-							    'page arguments' => array(2),
-							    'access callback' => 'dss_eastasia_book_pages_access_callback',
-							    'access arguments' => array(2),
-							    );
-  */
-  /*
-  $items['islandora/object/%islandora_object/view/default'] = array(
-								    'title' => 'Front',
-								    'type' => MENU_DEFAULT_LOCAL_TASK,
-								    'weight' => -1,
-								    'page callback' => 'dss_eastasia_front_page_menu',
-								    'page arguments' => array(2),
-								    'access callback' => 'dss_eastasia_book_pages_access_callback',
-								    'access arguments' => array(2),
-								    );
-  */
-
-  /*
-  $items['islandora/object/%islandora_object/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -1,
-  );
-  $items['islandora/object/%islandora_object/view/default'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -1,
-  );
-   */
-
-  /*
-function islandora_solr_facet_pages_menu() {
-  $items = array();
-
-  // @TODO: create separate permission?
-  $items['browse'] = array(
-    'page callback' => 'islandora_solr_facet_pages_callback',
-    'page arguments' => array(1, 2),
-    'access callback' => 'islandora_solr_facet_pages_access_callback',
-    'access arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
-*/
-
-  /*
-  $items['islandora/search'] = array(
-    'title' => 'Search results',
-    'page callback' => 'islandora_solr',
-    'access arguments' => array('search islandora solr'),
-    'type' => MENU_CALLBACK,
-  );
-
-   */

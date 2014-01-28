@@ -7,6 +7,47 @@
    *
    */
 
+function _dss_eastasia_get_islandora_fields($query_field, $filters) {
+
+  $filter = '';
+  if(!empty($filters)) {
+
+    $filter = $filters[0];
+  }
+
+  $fields = array();
+  $_fields = variable_get('islandora_solr_facet_pages_fields_data', array());
+
+  if(preg_match('/(.+?)\./', $query_field, $m) or preg_match('/(.+?)\./', $filter, $m) ) {
+
+    $query_field_namespace = $m[1];
+    switch($query_field_namespace) {
+
+    case 'cdm':
+    case 'eastasia':
+    case 'ldr':
+    case 'mdl_prints':
+    case 'geology_slides_esi':
+    case 'mckelvy':
+    case 'war_casualties':
+
+      foreach($_fields as $field) {
+
+	if(preg_match("/$query_field_namespace\./", $field['solr_field'], $m)) {
+
+	  $fields[] = $field;
+	}
+      }
+    
+    break;
+    default:
+      break;
+    }
+  }
+
+  return $fields;
+  }
+
 /**
  * @author griffinj@lafayette
  * Returns the top Solr facets for any given field
@@ -36,7 +77,6 @@ function _dss_eastasia_islandora_solr_facet_pages_block_callback() {
     $filters = array();
     $filtered_facets = array();
 
-
     if($path == '*:*' && array_key_exists('f', $query_params)) {
 
       foreach($query_params['f'] as $filtered_facet) {
@@ -51,18 +91,8 @@ function _dss_eastasia_islandora_solr_facet_pages_block_callback() {
     }
 
     // Get available fields from variable.
-    $fields = variable_get('islandora_solr_facet_pages_fields_data', array());
-
-    $solr_fields = array();
-
-    // Select the field being faceted
-    foreach($fields as $key => $value) {
-      
-      if($path != $value['path']) {
-	
-	$solr_fields[] = $value['solr_field'];
-      }
-    }
+    //$fields = variable_get('islandora_solr_facet_pages_fields_data', array());
+    $fields = _dss_eastasia_get_islandora_fields($path, $filters);
 
     $items = array();
 
