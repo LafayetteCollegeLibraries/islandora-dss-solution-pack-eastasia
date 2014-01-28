@@ -63,11 +63,10 @@ function dss_eastasia_theme_registry_alter(&$theme_registry) {
 
   //$theme_registry['islandora_solr_facet_pages_letterer']['path'] = drupal_get_path('module', 'dss_eastasia') . '/theme';
   //$theme_registry['islandora_solr_facet_pages_letterer']['file'] = 'includes/theme.inc';
-  $theme_registry['islandora_solr_facet_pages_letterer']['path'] = drupal_get_path('module', 'dss_eastasia') . '/includes';
-  $theme_registry['islandora_solr_facet_pages_letterer']['file'] = 'islandora_solr_facet_pages.inc';
+  //$theme_registry['islandora_solr_facet_pages_letterer']['path'] = drupal_get_path('module', 'dss_eastasia') . '/includes';
+  //$theme_registry['islandora_solr_facet_pages_letterer']['file'] = 'islandora_solr_facet_pages.inc';
 
-  $theme_registry['islandora_solr_facet_pages_results']['path'] = drupal_get_path('module', 'dss_eastasia') . '/theme';
-  //dpm();
+  //$theme_registry['islandora_solr_facet_pages_results']['path'] = drupal_get_path('module', 'dss_eastasia') . '/theme';
 }
 
 /**
