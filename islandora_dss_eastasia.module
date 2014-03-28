@@ -1,0 +1,60 @@
+<?php
+
+  /**
+   * @file
+   * Core functionality for the EAIC
+   *
+   */
+
+  /**
+   * Callback for viewing Objects using a citation URL
+   * @see islandora_view_object()
+   *
+   */
+function _islandora_dss_eastasia_view_citation($contentdm_citation) {
+
+  /** Should this be integrated with islandora_dss Module?
+   * @see _islandora_dss_search_ri_dc_title()
+   *
+   */
+  $query = '
+SELECT ?subject
+FROM <#ri>
+WHERE {
+
+?subject <dc:title> ?title ;
+         <fedora-model:state> <info:fedora/fedora-system:def/model#Active> ;
+FILTER regex(?title, "' . $contentdm_citation . '") .
+}
+';
+  global $user;
+
+  $tuque = islandora_get_tuque_connection($user);
+  $results = $tuque->repository->ri->sparqlQuery($query);
+  if(empty($results)) {
+
+    return drupal_not_found();
+  }
+  $result = array_shift($results);
+  $object = islandora_object_load($result['subject']['value']);
+
+  return islandora_view_object($object);
+}
+
+/**
+ * Implements hook_menu.
+ *
+ */
+function islandora_dss_eastasia_menu() {
+
+  $items['citation/%'] = array(
+			       'title' => 'Citation',
+			       'page callback' => '_islandora_dss_eastasia_view_citation',
+			       'page arguments' => array(1),
+			       //'type' => MENU_CALLBACK,
+			       'access callback' => TRUE,
+			       //'access arguments' => array(FEDORA_VIEW_OBJECTS, 2),
+			       );
+
+  return $items;
+}
